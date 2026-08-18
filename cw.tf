@@ -8,6 +8,8 @@ resource "aws_cloudwatch_event_rule" "new_user_group" {
   description   = "Event Rule to trigger the role entitlement lambda when a new User Group from external Identity Source has synced."
   event_pattern = <<PATTERN
     {
+      "source": ["aws.sso-directory"],
+      "detail-type": ["AWS API Call via CloudTrail"],
       "detail": {
         "eventSource": [
           "sso-directory.amazonaws.com"
@@ -44,6 +46,8 @@ resource "aws_cloudwatch_event_rule" "new_account_event" {
   description   = "Event Rules to trigger the role entitlement lambda when a new managed account has been vended under Organization through Control Tower"
   event_pattern = <<EOF
 {
+  "source": ["aws.controltower"],
+  "detail-type": ["AWS Service Event via CloudTrail"],
   "detail": {
     "serviceEventDetails": {
       "createManagedAccountStatus": {
@@ -84,6 +88,8 @@ resource "aws_cloudwatch_event_rule" "new_permissiont_set" {
   description   = "Event Rule to trigger the role entitlement lambda when a new Permission Set is created in AWS IAM Identity Center of management account."
   event_pattern = <<PATTERN
     {
+      "source": ["aws.sso"],
+      "detail-type": ["AWS API Call via CloudTrail"],
       "detail": {
         "eventSource": [
           "sso.amazonaws.com"

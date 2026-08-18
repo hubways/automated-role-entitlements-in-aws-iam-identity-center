@@ -85,6 +85,27 @@ def lambda_handler(event, context):
         group_name = event['detail']['requestParameters']['displayName']
         group_id = event['detail']['responseElements']['group']['groupId']
         print(f'Lambda invoked by CloudWatch Event for New User Group - {group_name} created in enterprise identity source synced with AWS IAM Identity Center.')
+
+        # Security: Cross-check the group ID from the event against Identity Store
+        # This prevents confused deputy attacks where a spoofed event provides a fake groupId
+        verified_groups = ids_client.list_groups(
+            IdentityStoreId=ids_id,
+            Filters=[{
+                "AttributePath": "DisplayName",
+                "AttributeValue": group_name
+            }]
+        )['Groups']
+
+        if not verified_groups:
+            print(f'SECURITY: Group "{group_name}" not found in Identity Store. Event may be spoofed. Aborting.')
+            return
+
+        verified_group_id = verified_groups[0]['GroupId']
+        if verified_group_id != group_id:
+            print(f'SECURITY: Group ID mismatch. Event groupId={group_id}, Identity Store groupId={verified_group_id}. Event may be spoofed. Aborting.')
+            return
+
+        print(f'Group ID verified against Identity Store successfully.')
         account_name = "-".join(group_name.split("-")[0:-1])     
         print('Retrieving Account Information using account_name and module logic')
         account_id = retrieve_account_information(org_client, account_name,"for_group_event")
@@ -93,7 +114,7 @@ def lambda_handler(event, context):
         if ps_name in sso_permission_sets.keys():
             ps_arn = sso_permission_sets[ps_name]
             print(f'Entitling User group - {group_name} to Account - {account_name} with Permission Set - {ps_name}')
-            attach_entitlement(sso_id, sso_client, account_id, group_id, ps_arn, ps_name, group_name)
+            attach_entitlement(sso_id, sso_client, account_id, verified_group_id, ps_arn, ps_name, group_name)
         else:
             print(f'Permission Set - {ps_name} for the User group - {group_name} is NOT PRESENT in AWS IAM Identity center')
         
