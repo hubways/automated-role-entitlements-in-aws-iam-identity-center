@@ -9,3 +9,7 @@ new_acnt_perms = [
   "SecurityAudit-role", #applicable only for External / Internal Auditors to assume in any of the AWS Accounts
   "SecurityIREng-role"  #applicable only for Incident response team to assume in case of any security events in any of the AWS Accounts
 ]
+
+# The ARN of your IAM Identity Center instance - used to scope down write permissions
+# Replace with your actual SSO instance ARN
+sso_instance_arn = "arn:aws:sso:::instance/ssoins-XXXXXXXXXXXXXXXX"

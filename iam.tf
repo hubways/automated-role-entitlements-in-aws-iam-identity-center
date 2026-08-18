@@ -63,8 +63,18 @@ data "aws_iam_policy_document" "lambda_permissions" {
       "sso:CreateAccountAssignment"
     ]
     resources = [
+      var.sso_instance_arn,
+      "${var.sso_instance_arn}/*",
+    ]
+  }
+  statement {
+    sid    = "DenyPutEventsToDefaultBus"
+    effect = "Deny"
+    actions = [
+      "events:PutEvents"
+    ]
+    resources = [
       "*",
     ]
   }
-
 }
